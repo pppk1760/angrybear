@@ -1,0 +1,155 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Angry Bear</title>
+</head>
+<body>
+<canvas id="myCanvas" width="480" height="320" style="background:url(images/bg.png)"></canvas>
+<script src="js/cordova-2.5.0.js"></script>
+<script src="js/Box2dWeb-2.1.a.3.js"></script>
+<script src="js/boxbox.js"></script>
+<script>
+	//Create game world
+	var c = document.getElementById("myCanvas"); 
+	var ctx = c.getContext('2d');
+	var world = boxbox.createWorld(c , {
+				debugDraw:false,	//ปิดการโหมดดีบั๊ก
+				gravity: {x: 0, y: 30}, // ตั้งค่าแรงดึงดูด
+				scale:1,
+				tickFrequency: 50, //ความถี่ในการคำนวณ
+				collisionOutlines:false, //ปิดการแสดงกรอบเช็คชน
+	    });
+	//Create Entities
+	var ground = world.createEntity({ //สร้างพื้น
+       	name: 'ground',  // ตั้งชื่อ
+		type:'static',   // ให้เป็นวัตถุคงที่
+		shape: 'square', // รูปทรงสี่เหลียม
+		active: true,    // สามารเช็คชนได้
+        x: 240,         //ตำแหน่งแกน x 
+        y: 280,	        //ตำแหน่งแกน y
+		image: 'images/ground.png',
+		imageStretchToFit: true, //ขยายรูปให้เต็มความกว้างความสูง
+		imageOffsetX:-120, //ปรับรูปให้ตรงกับกรอบเช็คชนแนวแกน x
+		imageOffsetY:-20,  //ปรับรูปให้ตรงกับกรอบเช็คชนแนวแกน y
+        height: 80, // ความสูง
+        width: 480,  // ความกว้าง
+		onStartContact: function (obj){ 
+					if(obj.name() == "bee"){
+						bee.destroy();
+					}
+				}
+    	});// เมื่อมีวัตถุชื่อ bee มาสัมผัสให้ทำลายวัตถุนั้น
+		
+	var bear = world.createEntity({ // สร้างหมี
+       	name: 'bear',    //ตั้งชื่อ
+		type:'dynamic',  // ให้วัตถุเคลื่อนที่ได้
+        x: 108,          //ตำแหน่งแกน x
+        y: 160,          //ตำแหน่งแกน y
+		image: 'images/bear.png',
+		imageStretchToFit: true, //ขยายรูปให้เต็มความกว้างความสูง
+		imageOffsetX:-12,  //ปรับรูปให้ตรงกับกรอบเช็คชนแนวแกน x
+		imageOffsetY:-12,  //ปรับรูปให้ตรงกับกรอบเช็คชนแนวแกน y
+		height:50,   // ความสูง
+        width: 50,   // ความกว้าง
+		restitution:0.3, //ค่าการกระดอน 
+		onKeyUp : addForce, //เมื่อกดปุ่มทางคีย์บอร์ดให้เรียกฟังก์ชั่น addForce
+    });
+	// ถ้าปุ่มที่กดมี keyCode เป็น 66 หรือ 13 (ปุ่ม b หรือ Enter)
+	// ให้ทำการใส่แรงให้กับหมี โดยทำมุม 40 องศากับแนวแกน y
+	function addForce(e){
+			if(e.keyCode == 66 || e.keyCode==13){
+				bear.applyImpulse(550000, 40);
+				cannon.active = true;
+			}
+		}
+		
+	var cannon = world.createEntity({ // สร้างปืนใหญ่
+       	name: 'cannon', //ตั้งชื่อ
+		type:'dynamic', // ให้วัตถุเคลื่อนที่ได้
+		active:false, // ไม่ทำการเช็คชน
+        x: 45,		//ตำแหน่งแกน x
+        y: 200,		//ตำแหน่งแกน y
+		rotation:-20,  //หมุนวัตถุทวนเข็มนาฬิกา 20 องศา
+		image: 'images/cannon.png',
+		imageStretchToFit: true, //ขยายรูป
+		imageOffsetX:-10, //ปรับรูปให้ตรงกับกรอบเช็คชนแนวแกน x
+		imageOffsetY:-12, //ปรับรูปให้ตรงกับกรอบเช็คชนแนวแกน y
+		height: 70, // ความสูง
+        width: 90,  // ความกว้าง
+		restitution:0.9 //ค่าการกระดอน 
+    });
+	// สร้างบล๊อกสำหรับวาดรังผึ้ง
+		var block = world.createEntity({ 
+       		name: 'block', //ตั้งชื่อ
+			type:'static', //ให้เป็นวัตถุคงที่
+        	x: 360,  //ตำแหน่งแกน x
+        	y: 120,  //ตำแหน่งแกน y
+			height: 20,  //ความสูง
+        	width: 80,   //ความกว้าง
+			image: 'images/block.png', 
+			imageStretchToFit: true, //ขยายรูป
+			imageOffsetX:-25, //ปรับรูปให้ตรงกับกรอบเช็คชนแนวแกน x
+			imageOffsetY:-7, //ปรับรูปให้ตรงกับกรอบเช็คชนแนวแกน y
+    	});
+	// สร้างรังผึ้ง
+		var bee = world.createEntity({
+       		name: 'bee', //ตั้งชื่อ
+			type:'dynamic', //ให้วัตถุเคลื่อนที่ได้
+        	x: 360, // ตำแหน่งแกน x
+        	y: 50,  // ตำแหน่งแกน y
+			height: 50, //ความสูง
+        	width: 45, // ความกว้าง
+			image: 'images/bee.png',
+			imageStretchToFit: true, //ขยายรูป
+			imageOffsetX:-10, //ปรับรูปให้ตรงกับกรอบเช็คชนแนวแกน x
+			imageOffsetY:-10, //ปรับรูปให้ตรงกับกรอบเช็คชนแนวแกน y
+			restitution:0.7, //ค่าการกระดอน 
+    	});
+		
+	    var hiddenblock = world.createEntity({
+       		name: 'hiddenblock',
+			type:'static',
+        	x: 90,
+       		y: 190,
+			height: 20,
+        	width: 50,
+			image: 'images/hiddenblock.png', 
+			imageStretchToFit: true,
+			imageOffsetX:-25,
+			imageOffsetY:-7,
+    	});
+		//ข้อความ
+		world.onRender(drawText);
+		function drawText(){	
+			ctx.fillStyle="black";		//เลือกสีตัวอักษร
+			ctx.font = "14px Arial";	//ขนาดและชนิดฟอนต์	
+			ctx.fillText("Press the B button to shoot.",0,20); //ข้อความแบบที่ 1 
+			ctx.fillText("X:" + bear.position().x , 0, 40);  //ข้อความแบบที่ 2
+			ctx.fillText("Y:" + bear.position().y , 0, 60); //ข้อความแบบที่ 3
+		}
+		window.addEventListener('click',clickReporter,false); // เรียกใช้ฟังก์ชั่น clickReporter เมื่อมีการคลิกเมาส์
+		function clickReporter(e) {
+			deltaX=e.pageX;		//x=e.pageX
+			deltaY=320-e.pageY; //y=ความสูงของ canvas - e.pageY
+			rad=Math.atan2(deltaY,deltaX); // หามุม radius จาก arctan
+			thetaAngle=Math.round(rad/(Math.PI/180)); //แปลง radius เป็น angle
+			alphaAngle=90-thetaAngle; //มุม alpha = 90 - theta
+			bear.applyImpulse(550000, alphaAngle); // ใส่แรงให้ด้วยมุม alpha
+			time.enableTime=true;
+		}
+		var time={enableTime:false, value:0};
+		world.onTick(update);				//เรียกใช้ฟังก์ชั่น update ทุกๆ 50 มิลลิวินาที
+		function update(){
+			if (time.enableTime==true){		//ถ้าค่า enableTime เป็น true
+				time.value=time.value+1;	// ให้เพิ่มค่า value
+			}
+			if (time.value>=250){  		// ถ้า value มากกว่า 250หรือ(250*50)=12.5 วินาที 
+				alert("Play again.");	// ให้แสดงคำว่า Play again
+				location.reload();		// จากนั้นให้รีโหลดหน้าใหม่อีกครั้ง
+			}
+		}
+</script>
+</body >
+</html>
+
